@@ -1,0 +1,256 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Dhelan and Sherzaahd's Script Hub!?!",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "Wait A Second.",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DeadRailsScripts",
+        FileName = "Settings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "your-discord-invite-code",
+        RememberJoins = true,
+    },
+    KeySystem = false,
+    Key = "YourSecretKey",
+})
+
+-- Tabs
+local MiscTab = Window:CreateTab("Misc")
+local AutoCollectTab = Window:CreateTab("Auto Collect")
+local KillingTab = Window:CreateTab("Killing")
+local MessageTab = Window:CreateTab("Message From Dhelan")
+
+-- Auto Collect Settings
+local autoCollectBonds = false
+local autoCollectWeapons = false
+local autoCollectArmor = false
+local autoCollectAmmo = false
+
+-- ESP Settings
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+-- Message From Dhelan Button
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+MessageTab:CreateButton({
+    Name = "Hello Broskieee!!",
+    Callback = function()
+        local message = "Hello Broskieee!!, it's me The Super Duper Epic Cool Hacker ykyk, Hehe i hope you like the script that i made for US ONLY, sorry because there is not much scripts on it right now. But, in the next sunday maybe i can add more things, that's all byeii!!"
+        
+        -- Create a notification or pop-up displaying the message
+        local messageNotification = Instance.new("TextLabel")
+        messageNotification.Parent = ScreenGui
+        messageNotification.Text = message
+        messageNotification.Size = UDim2.new(0, 400, 0, 100)
+        messageNotification.Position = UDim2.new(0.5, -200, 0.5, -50)
+        messageNotification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        messageNotification.TextColor3 = Color3.fromRGB(255, 255, 255)
+        messageNotification.TextSize = 14
+        messageNotification.TextWrapped = true
+        messageNotification.TextScaled = true
+
+        -- Remove the message after 20.5 seconds
+        delay(20.5, function()
+            messageNotification:Destroy()
+        end)
+    end
+})
+
+-- Auto Collect Tab - Toggles
+AutoCollectTab:CreateToggle({
+    Name = "Collect Bonds (Treasury Bond)",
+    Default = false,
+    Callback = function(value)
+        autoCollectBonds = value
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Collect Weapons",
+    Default = false,
+    Callback = function(value)
+        autoCollectWeapons = value
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Collect Armor",
+    Default = false,
+    Callback = function(value)
+        autoCollectArmor = value
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Collect Ammo",
+    Default = false,
+    Callback = function(value)
+        autoCollectAmmo = value
+    end
+})
+
+-- Auto Collect Logic - Optimized and Event-Driven
+local function collectItem(itemName, parent)
+    local item = workspace:FindFirstChild(itemName)
+    if item then
+        item.Parent = parent
+    end
+end
+
+-- Aimbot Logic (with Smooth Targeting)
+local function aimAtTarget(targetPosition)
+    -- Smooth aimbot logic: Gradually adjust the aim to target position for smoother experience
+    local currentPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+    local direction = (targetPosition - currentPosition).unit
+    local newPosition = currentPosition + direction * 0.1  -- Smooth movement
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
+end
+
+-- Target Detection (Aimbot)
+local function getClosestTarget()
+    local closestTarget = nil
+    local shortestDistance = math.huge
+    for _, npc in pairs(workspace.Enemies:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and not npc:FindFirstChild("Player") then
+            local distance = (npc.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+            if distance < shortestDistance then
+                closestTarget = npc
+                shortestDistance = distance
+            end
+        end
+    end
+    return closestTarget
+end
+
+-- Gun Kill Aura Logic
+local function shootAtTarget(target)
+    local args = {
+        [1] = 1743943927.954045,  -- Example timestamp (adjust based on your needs)
+        [2] = game.Players.LocalPlayer:WaitForChild("Shotgun"),  -- Example weapon (adjust for other weapons)
+        [3] = CFrame.new(target.HumanoidRootPart.Position),  -- Target position
+        [4] = {}  -- Additional arguments if needed
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Weapon"):WaitForChild("Shoot"):FireServer(unpack(args))
+end
+
+-- Melee Kill Aura with Extended Hitbox (optional, if desired)
+local function meleeHitboxExtension(character)
+    -- Create an invisible part as the detection area around the character
+    local detectionPart = Instance.new("Part")
+    detectionPart.Size = Vector3.new(15, 5, 15)  -- Increase the size of the detection box
+    detectionPart.Position = character.HumanoidRootPart.Position
+    detectionPart.Anchored = true
+    detectionPart.CanCollide = false
+    detectionPart.Transparency = 0.5  -- Make it semi-transparent for debugging (if needed)
+    detectionPart.Parent = workspace
+
+    -- Detect NPCs (models with Humanoid) within the extended hitbox
+    for _, npc in pairs(workspace.Enemies:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and not npc:FindFirstChild("Player") then
+            local npcHumanoidRootPart = npc:FindFirstChild("HumanoidRootPart")
+            if npcHumanoidRootPart and (npcHumanoidRootPart.Position - detectionPart.Position).Magnitude <= detectionPart.Size.X / 2 then
+                -- If an NPC is within range, perform the melee attack
+                -- Simulate a melee attack by activating the weapon's event
+                local character = game.Players.LocalPlayer.Character
+                for _, tool in pairs(character:GetChildren()) do
+                    if tool:IsA("Tool") and (tool.Name == "Vampire Knife" or tool.Name == "MeleeWeapon" or tool.Name == "Sword" or tool.Name == "Tomahawk" or tool.Name == "Jade Sword") then
+                        -- Trigger the melee attack (swing the weapon)
+                        tool:Activate()  -- Swing the weapon (this could be the attack action)
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    -- Cleanup the detection part after a short delay (prevent performance issues)
+    delay(0.1, function()
+        detectionPart:Destroy()
+    end)
+end
+
+KillingTab:CreateToggle({
+    Name = "Gun Kill Aura",
+    Default = false,
+    Callback = function(value)
+        -- Logic to automatically shoot when enemies are in range
+        while value do
+            local target = getClosestTarget()
+            if target then
+                aimAtTarget(target.HumanoidRootPart.Position)  -- Aim at the closest target
+                shootAtTarget(target)  -- Fire at the target
+            end
+            wait(0.1)  -- Adjust the frequency of checking for enemies and shooting
+        end
+    end
+})
+
+KillingTab:CreateToggle({
+    Name = "Melee Kill Aura (Large Hitbox)",
+    Default = false,
+    Callback = function(value)
+        -- Logic to automatically swing melee weapons when enemies are nearby with large hitbox
+        while value do
+            local character = game.Players.LocalPlayer.Character
+            if character and character:FindFirstChild("Humanoid") then
+                local humanoid = character:FindFirstChild("Humanoid")
+                -- Only activate if the player is holding a melee weapon
+                for _, tool in pairs(character:GetChildren()) do
+                    if tool:IsA("Tool") and (tool.Name == "Vampire Knife" or tool.Name == "MeleeWeapon" or tool.Name == "Sword" or tool.Name == "Tomahawk" or tool.Name == "Jade Sword") then
+                        -- Extend hitbox and check for nearby NPCs to trigger the melee attack
+                        meleeHitboxExtension(character)
+                        break
+                    end
+                end
+            end
+            wait(0.1)  -- Adjust the frequency of checking for enemies and melee activation
+        end
+    end
+})
+
+-- Auto Collect Logic (Event-Driven)
+RunService.Heartbeat:Connect(function()
+    if autoCollectBonds then
+        collectItem("Treasury Bond", game.Players.LocalPlayer.Backpack)
+    end
+
+    if autoCollectWeapons then
+        collectItem("Electrocutioner", game.Players.LocalPlayer.Backpack)
+        collectItem("Bolt-Action Rifle", game.Players.LocalPlayer.Backpack)
+    end
+
+    if autoCollectArmor then
+        collectItem("Right Shoulder Armor", game.Players.LocalPlayer.Backpack)
+        collectItem("Left Shoulder Armor", game.Players.LocalPlayer.Backpack)
+    end
+
+    if autoCollectAmmo then
+        collectItem("Rifle Ammo", game.Players.LocalPlayer.Backpack)
+        collectItem("Shotgun Shells", game.Players.LocalPlayer.Backpack)
+    end
+end)
+
+-- Ensure ESP only works for NPCs (not players)
+MiscTab:CreateToggle({
+    Name = "ESP NPCs",
+    Default = false,
+    Callback = function(value)
+        -- Logic to show or hide NPC ESP
+        while value do
+            for _, npc in pairs(workspace.Enemies:GetChildren()) do
+                if npc:IsA("Model") and not npc:FindFirstChild("Player") then
+                    renderESP(npc, Color3.fromRGB(255, 0, 0))  -- NPC ESP
+                end
+            end
+            wait(1)  -- Adjust interval to manage performance
+        end
+    end
+})
+
+-- End of script
