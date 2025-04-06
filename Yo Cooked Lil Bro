@@ -1,0 +1,276 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Dhelan and Sherzaahd's Script Hub",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DeadRailsScripts",
+        FileName = "Settings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "your-discord-invite-code",
+        RememberJoins = true,
+    },
+    KeySystem = false,
+    Key = "YourSecretKey",
+})
+
+local MiscTab = Window:CreateTab("Misc")
+local AutoCollectTab = Window:CreateTab("Auto Collect")
+local MessageTab = Window:CreateTab("Message From Dhelan")
+local KillingTab = Window:CreateTab("Killing")  -- New Killing Tab
+
+-- Aimbot Variables
+local fov = 136
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Cam = workspace.CurrentCamera
+local Player = game:GetService("Players").LocalPlayer
+
+local validNPCs = {}
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+-- Melee Kill Aura Variables
+local meleeKillAuraEnabled = false
+local meleeWeapons = {
+    "Shovel", "Jade Sword", "Vampire Knife", "Tomahawk"
+}
+
+-- Gun Kill Aura Variables
+local gunKillAuraEnabled = false
+local gunWeapons = {
+    "Shotgun", "Navy Revolver", "Sawed-Off Shotgun", "Revolver", "Rifle", "Bolt-Action Rifle", "Mauser"
+}
+
+-- Target enemies for Gun Kill Aura
+local targetEnemies = {
+    "Zombie", "Werewolf", "Vampire", "Banker", "Nikola Tesla", "Wolf", "Outlaw", "Skeleton Miner"
+}
+
+local function checkMeleeKillAura()
+    if not meleeKillAuraEnabled then return end
+
+    for _, npc in pairs(validNPCs) do
+        if npc:FindFirstChild("HumanoidRootPart") then
+            local distance = (Player.Character.HumanoidRootPart.Position - npc.HumanoidRootPart.Position).Magnitude
+            if distance < 10 then
+                -- Check if player has any of the melee weapons in their inventory
+                for _, weaponName in pairs(meleeWeapons) do
+                    local weapon = Player.Backpack:FindFirstChild(weaponName)
+                    if weapon then
+                        -- If weapon is found, simulate attacking the NPC
+                        local humanoid = npc:FindFirstChild("Humanoid")
+                        if humanoid then
+                            humanoid.Health = 0  -- Kill the NPC
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function checkGunKillAura()
+    if not gunKillAuraEnabled then return end
+
+    for _, npc in pairs(validNPCs) do
+        if npc:FindFirstChild("HumanoidRootPart") then
+            local distance = (Player.Character.HumanoidRootPart.Position - npc.HumanoidRootPart.Position).Magnitude
+            local npcName = npc.Name
+            if distance < 20 and table.find(targetEnemies, npcName) then
+                -- Check if player has any of the gun weapons in their inventory
+                for _, weaponName in pairs(gunWeapons) do
+                    local weapon = Player.Backpack:FindFirstChild(weaponName)
+                    if weapon then
+                        -- If weapon is found, simulate shooting at the NPC
+                        local humanoid = npc:FindFirstChild("Humanoid")
+                        if humanoid then
+                            -- Simulate shooting (you would need to trigger the gun's functionality here)
+                            humanoid.Health = 0  -- Kill the NPC
+                            break  -- Stop shooting after the NPC dies
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Check for enemies in the game
+local function updateNPCs()
+    local tempTable = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj.Humanoid.Health > 0 and obj:FindFirstChild("HumanoidRootPart") then
+            tempTable[obj] = true
+        end
+    end
+    validNPCs = {}
+    for obj in pairs(tempTable) do
+        table.insert(validNPCs, obj)
+    end
+end
+
+-- Melee Kill Aura Toggle
+KillingTab:CreateToggle({
+    Name = "Melee Kill Aura",
+    Default = false,
+    Callback = function(value)
+        meleeKillAuraEnabled = value
+        if value then
+            print("Melee Kill Aura Activated")
+        else
+            print("Melee Kill Aura Deactivated")
+        end
+    end
+})
+
+-- Gun Kill Aura Toggle
+KillingTab:CreateToggle({
+    Name = "Gun Kill Aura",
+    Default = false,
+    Callback = function(value)
+        gunKillAuraEnabled = value
+        if value then
+            print("Gun Kill Aura Activated")
+        else
+            print("Gun Kill Aura Deactivated")
+        end
+    end
+})
+
+-- Update NPCs periodically to ensure correct targeting
+RunService.Heartbeat:Connect(function()
+    updateNPCs()
+    checkMeleeKillAura()  -- Check for melee kill aura every frame
+    checkGunKillAura()  -- Check for gun kill aura every frame
+end)
+
+-- Auto Collect Variables
+local autoCollectBonds = false
+local autoCollectWeapons = false
+local autoCollectArmor = false
+local autoCollectAmmo = false
+
+-- Esp Things Variables
+local espThings = {
+    "Coal", "Jade Sword", "Treasury Bond", "Holy Water", "Crucifix", "Shotgun", "Shotgun Shells",
+    "Rifle", "Rifle Ammo", "Revolver Ammo", "Revolver", "Tomahawk", "Electrocutioner", "Bolt-Action Rifle",
+    "Navy Revolver", "Sawed-Off Shotgun", "Gold Bar", "Dynamite", "Barbed Wire", "Sheet Metal", 
+    "Bandages", "Snake Oil", "Jade Mask"
+}
+
+local espBoxes = {}
+
+-- Esp Functionality
+local function createEspForItem(item)
+    local espBox = Drawing.new("Square")
+    espBox.Color = Color3.fromRGB(255, 0, 0)
+    espBox.Thickness = 1
+    espBox.Filled = false
+    espBox.Visible = false
+    espBoxes[item] = espBox
+end
+
+local function updateEspForItem(item, position)
+    if espBoxes[item] then
+        local screenPosition, onScreen = Cam:WorldToViewportPoint(position)
+        if onScreen then
+            local size = 20
+            espBoxes[item].Position = Vector2.new(screenPosition.X - size / 2, screenPosition.Y - size / 2)
+            espBoxes[item].Size = Vector2.new(size, size)
+            espBoxes[item].Visible = true
+        else
+            espBoxes[item].Visible = false
+        end
+    end
+end
+
+local function removeEspForItem(item)
+    if espBoxes[item] then
+        espBoxes[item].Visible = false
+    end
+end
+
+-- Create ESP for all things initially
+for _, itemName in pairs(espThings) do
+    createEspForItem(itemName)
+end
+
+local function handleItemPickup(item)
+    -- Check if the item name is in the espThings list and remove the ESP
+    if table.find(espThings, item.Name) then
+        removeEspForItem(item.Name)
+    end
+end
+
+local function handleItemDescendant(descendant)
+    if descendant:IsA("Part") and table.find(espThings, descendant.Name) then
+        -- When a new item appears, create its ESP and update it
+        if not espBoxes[descendant.Name] then
+            createEspForItem(descendant.Name)
+        end
+        updateEspForItem(descendant.Name, descendant.Position)
+    end
+end
+
+workspace.DescendantAdded:Connect(handleItemDescendant)
+workspace.DescendantRemoving:Connect(function(descendant)
+    if descendant:IsA("Part") and table.find(espThings, descendant.Name) then
+        -- Handle item pickup or removal
+        handleItemPickup(descendant)
+    end
+end)
+
+local heartbeat = RunService.Heartbeat
+heartbeat:Connect(function()
+    -- Update the ESP for each item if they exist
+    for _, itemName in pairs(espThings) do
+        local item = workspace:FindFirstChild(itemName)
+        if item then
+            updateEspForItem(itemName, item.Position)
+        end
+    end
+end)
+
+-- Auto Collect Toggles
+
+-- Collect Bonds
+AutoCollectTab:CreateToggle({
+    Name = "Collect Treasury Bonds",
+    Default = false,
+    Callback = function(value)
+        autoCollectBonds = value
+        while autoCollectBonds do
+            for _, item in pairs(workspace:GetChildren()) do
+                if item:IsA("Part") and item.Name == "Treasury Bond" then
+                    item:Destroy()  -- Simulating collection by destroying the bond part
+                end
+            end
+            wait(1)
+        end
+    end
+})
+
+-- Collect Weapons
+AutoCollectTab:CreateToggle({
+    Name = "Collect Weapons",
+    Default = false,
+    Callback = function(value)
+        autoCollectWeapons = value
+        while autoCollectWeapons do
+            for _, item in pairs(workspace:GetChildren()) do
+                if item:IsA("Tool") and (item.Name == "Electrocutioner" or item.Name == "Bolt-Action Rifle" or item.Name == "Navy Revolver" or 
+                                          item.Name == "Shotgun" or item.Name == "Rifle" or item.Name == "Mauser" or item.Name == "Revolver" or
+                                          item.Name == "Sawed-Off Shotgun" or item.Name == "Holy Water" or item.Name == "Tomahawk" or 
+                                          item.Name == "Jade Sword" or item.Name == "Vampire Knife") then
+                    item.Parent = game.Players.LocalPlayer.Backpack
+                end
+            end
+            wait(1)
+        end
+    end
+})
