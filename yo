@@ -1,0 +1,159 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Dhelan and Sherzaahd's Trolling Gui",
+    LoadingTitle = "Loading",
+    LoadingSubtitle = "?Secret?",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DeadRailsScripts",
+        FileName = "Settings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "your-discord-invite-code",
+        RememberJoins = true,
+    },
+    KeySystem = false,
+    Key = "YourSecretKey",
+})
+
+local MainTab = Window:CreateTab("Dead Rails", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362459)
+local MessageTab = Window:CreateTab("Message from Dhelan", 4483362460)
+local GunsTab = Window:CreateTab("Guns", 4483362461)
+
+-- Initialize Variables
+local fov = 136
+local isAiming = false
+local validNPCs = {}
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+local FOVring = Drawing.new("Circle")
+local noclipEnabled = false
+local killAuraEnabled = false
+local autoCollectItems = false
+local autoCollectBonds = false
+local autoCollectAmmo = false
+local autoCollectGuns = false
+local Cam = workspace.CurrentCamera
+local Player = game:GetService("Players").LocalPlayer
+
+-- Create FOV Ring
+FOVring.Visible = false
+FOVring.Thickness = 2
+FOVring.Color = Color3.fromRGB(128, 0, 128)
+FOVring.Filled = false
+FOVring.Radius = fov
+FOVring.Position = Cam.ViewportSize / 2
+
+-- Function to detect NPCs
+local function isNPC(obj)
+    return obj:IsA("Model") 
+        and obj:FindFirstChild("Humanoid")
+        and obj.Humanoid.Health > 0
+        and obj:FindFirstChild("Head")
+        and obj:FindFirstChild("HumanoidRootPart")
+        and not game:GetService("Players"):GetPlayerFromCharacter(obj)
+end
+
+-- Function to update NPCs list
+local function updateNPCs()
+    local tempTable = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if isNPC(obj) then
+            tempTable[obj] = true
+        end
+    end
+    for i = #validNPCs, 1, -1 do
+        if not tempTable[validNPCs[i]] then
+            table.remove(validNPCs, i)
+        end
+    end
+    for obj in pairs(tempTable) do
+        if not table.find(validNPCs, obj) then
+            table.insert(validNPCs, obj)
+        end
+    end
+end
+
+-- Function to handle NPC destruction
+local function handleDescendant(descendant)
+    if isNPC(descendant) then
+        table.insert(validNPCs, descendant)
+        local humanoid = descendant:WaitForChild("Humanoid")
+        humanoid.Destroying:Connect(function()
+            for i = #validNPCs, 1, -1 do
+                if validNPCs[i] == descendant then
+                    table.remove(validNPCs, i)
+                    break
+                end
+            end
+        end)
+    end
+end
+
+-- Detect NPCs on descendant added or removed
+workspace.DescendantAdded:Connect(handleDescendant)
+workspace.DescendantRemoved:Connect(function(descendant)
+    if isNPC(descendant) then
+        for i = #validNPCs, 1, -1 do
+            if validNPCs[i] == descendant then
+                table.remove(validNPCs, i)
+                break
+            end
+        end
+    end
+end)
+
+-- Update Drawings for FOV ring
+local function updateDrawings()
+    FOVring.Position = Cam.ViewportSize / 2
+    FOVring.Radius = fov * (Cam.ViewportSize.Y / 1080)
+end
+
+-- Predict NPC position
+local function predictPos(target)
+    local rootPart = target:FindFirstChild("HumanoidRootPart")
+    local head = target:FindFirstChild("Head")
+    if not rootPart or not head then
+        return head and head.Position or rootPart and rootPart.Position
+    end
+    local velocity = rootPart.Velocity
+    local predictionTime = 0.02
+    local basePosition = rootPart.Position + velocity * predictionTime
+    local headOffset = head.Position - rootPart.Position
+    return basePosition + headOffset
+end
+
+-- Get Target function for Aimlock
+local function getTarget()
+    local nearest = nil
+    local minDistance = math.huge
+    local viewportCenter = Cam.ViewportSize / 2
+    raycastParams.FilterDescendantsInstances = {Player.Character}
+    for _, npc in ipairs(validNPCs) do
+        local predictedPos = predictPos(npc)
+        local screenPos, visible = Cam:WorldToViewportPoint(predictedPos)
+        if visible and screenPos.Z > 0 then
+            local ray = workspace:Raycast(
+                Cam.CFrame.Position,
+                (predictedPos - Cam.CFrame.Position).Unit * 1000,
+                raycastParams
+            )
+            if ray and ray.Instance:IsDescendantOf(npc) then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - viewportCenter).Magnitude
+                if distance < minDistance and distance < fov then
+                    minDistance = distance
+                    nearest = npc
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+-- Aim at target position
+local function aim(targetPosition)
+    local currentCF = Cam.CFrame
+    l
