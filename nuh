@@ -1,0 +1,297 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Create the main window for the GUI
+local Window = Rayfield:CreateWindow({
+    Name = "Dhelan and Sherzaahd's Trolling Gui",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DeadRailsScripts",
+        FileName = "Settings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "your-discord-invite-code",
+        RememberJoins = true,
+    },
+    KeySystem = false,
+    Key = "YourSecretKey",
+})
+
+-- Tabs for different categories in the GUI
+local MainTab = Window:CreateTab("Dead Rails", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362459)
+local MessageTab = Window:CreateTab("Message from Dhelan", 4483362460)
+local GunsTab = Window:CreateTab("Guns", 4483362461)
+
+-- Initialize Variables
+local fov = 136
+local isAiming = false
+local validNPCs = {}
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+local FOVring = Drawing.new("Circle")
+local noclipEnabled = false
+local killAuraEnabled = false
+local autoCollectItems = false
+local autoCollectBonds = false
+local autoCollectAmmo = false
+local autoCollectGuns = false
+local Cam = workspace.CurrentCamera
+local Player = game:GetService("Players").LocalPlayer
+
+FOVring.Visible = false
+FOVring.Thickness = 2
+FOVring.Filled = false
+FOVring.Radius = fov
+FOVring.Position = Cam.ViewportSize / 2
+
+-- Function Definitions
+
+-- Detect if an object is an NPC
+local function isNPC(obj)
+    return obj:IsA("Model") 
+        and obj:FindFirstChild("Humanoid")
+        and obj.Humanoid.Health > 0
+        and obj:FindFirstChild("Head")
+        and obj:FindFirstChild("HumanoidRootPart")
+        and not game:GetService("Players"):GetPlayerFromCharacter(obj)
+end
+
+-- Update the list of NPCs
+local function updateNPCs()
+    local tempTable = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if isNPC(obj) then
+            tempTable[obj] = true
+        end
+    end
+    for i = #validNPCs, 1, -1 do
+        if not tempTable[validNPCs[i]] then
+            table.remove(validNPCs, i)
+        end
+    end
+    for obj in pairs(tempTable) do
+        if not table.find(validNPCs, obj) then
+            table.insert(validNPCs, obj)
+        end
+    end
+end
+
+-- Handle NPC destruction (remove from list when destroyed)
+local function handleDescendant(descendant)
+    if isNPC(descendant) then
+        table.insert(validNPCs, descendant)
+        local humanoid = descendant:WaitForChild("Humanoid")
+        humanoid.Destroying:Connect(function()
+            for i = #validNPCs, 1, -1 do
+                if validNPCs[i] == descendant then
+                    table.remove(validNPCs, i)
+                    break
+                end
+            end
+        end)
+    end
+end
+
+-- Detect NPCs on descendant added or removed
+workspace.DescendantAdded:Connect(handleDescendant)
+workspace.DescendantRemoved:Connect(function(descendant)
+    if isNPC(descendant) then
+        for i = #validNPCs, 1, -1 do
+            if validNPCs[i] == descendant then
+                table.remove(validNPCs, i)
+                break
+            end
+        end
+    end
+end)
+
+-- Update FOV ring position and size
+local function updateDrawings()
+    FOVring.Position = Cam.ViewportSize / 2
+    FOVring.Radius = fov * (Cam.ViewportSize.Y / 1080)
+end
+
+-- Predict NPC's position based on velocity
+local function predictPos(target)
+    local rootPart = target:FindFirstChild("HumanoidRootPart")
+    local head = target:FindFirstChild("Head")
+    if not rootPart or not head then
+        return head and head.Position or rootPart and rootPart.Position
+    end
+    local velocity = rootPart.Velocity
+    local predictionTime = 0.02
+    local basePosition = rootPart.Position + velocity * predictionTime
+    local headOffset = head.Position - rootPart.Position
+    return basePosition + headOffset
+end
+
+-- Get the target for aimlock (nearest NPC within FOV)
+local function getTarget()
+    local nearest = nil
+    local minDistance = math.huge
+    local viewportCenter = Cam.ViewportSize / 2
+    raycastParams.FilterDescendantsInstances = {Player.Character}
+    for _, npc in ipairs(validNPCs) do
+        local predictedPos = predictPos(npc)
+        local screenPos, visible = Cam:WorldToViewportPoint(predictedPos)
+        if visible and screenPos.Z > 0 then
+            local ray = workspace:Raycast(
+                Cam.CFrame.Position,
+                (predictedPos - Cam.CFrame.Position).Unit * 1000,
+                raycastParams
+            )
+            if ray and ray.Instance:IsDescendantOf(npc) then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - viewportCenter).Magnitude
+                if distance < minDistance and distance < fov then
+                    minDistance = distance
+                    nearest = npc
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+-- Aim at the target position
+local function aim(targetPosition)
+    local currentCF = Cam.CFrame
+    local targetDirection = (targetPosition - currentCF.Position).Unit
+    local smoothFactor = 0.581
+    local newLookVector = currentCF.LookVector:Lerp(targetDirection, smoothFactor)
+    Cam.CFrame = CFrame.new(currentCF.Position, currentCF.Position + newLookVector)
+end
+
+-- Rayfield GUI Button and Slider Definitions
+
+-- Toggle Aimlock
+MainTab:CreateButton({
+    Name = "Toggle Aimlock",
+    Callback = function()
+        isAiming = not isAiming
+        FOVring.Visible = isAiming
+        updateNPCs()
+    end
+})
+
+-- FOV Slider
+MainTab:CreateSlider({
+    Name = "FOV Size",
+    Range = {50, 200},
+    Increment = 1,
+    CurrentValue = fov,
+    Callback = function(value)
+        fov = value
+        updateDrawings()
+    end
+})
+
+-- Toggle Noclip
+MainTab:CreateButton({
+    Name = "Toggle Noclip",
+    Callback = function()
+        noclipEnabled = not noclipEnabled
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if noclipEnabled then
+                local character = Player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CanCollide = false
+                end
+            else
+                local character = Player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CanCollide = true
+                end
+            end
+        end)
+    end
+})
+
+-- Toggle Kill Aura
+MainTab:CreateButton({
+    Name = "Toggle Kill Aura",
+    Callback = function()
+        killAuraEnabled = not killAuraEnabled
+        while killAuraEnabled do
+            for _, npc in ipairs(validNPCs) do
+                if npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+                    npc.Humanoid.Health = 0
+                end
+            end
+            wait(0.1)  -- Adjust delay if needed
+        end
+    end
+})
+
+-- Auto Collect Options (Misc Tab)
+MiscTab:CreateToggle({
+    Name = "Auto Collect Items",
+    Default = false,
+    Callback = function(value)
+        autoCollectItems = value
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Bonds",
+    Default = false,
+    Callback = function(value)
+        autoCollectBonds = value
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Ammo",
+    Default = false,
+    Callback = function(value)
+        autoCollectAmmo = value
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Guns",
+    Default = false,
+    Callback = function(value)
+        autoCollectGuns = value
+    end
+})
+
+-- Message from Dhelan Button (Message Tab)
+MessageTab:CreateButton({
+    Name = "Show Message",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Message from Dhelan",
+            Content = "Hello Broskieee!! It's me the Super Duper Cool Hacker Dhelan, ykyk I hope you like the script hub I made for US ONLY so uhhh. Byye!!",
+            Duration = 8.5,
+        })
+    end
+})
+
+-- Auto Reload Guns Button (Guns Tab)
+GunsTab:CreateButton({
+    Name = "Auto Reload Guns",
+    Callback = function()
+        for _, gun in pairs(Player.Backpack:GetChildren()) do
+            if gun:IsA("Tool") and gun:FindFirstChild("Reload") then
+                gun.Reload:FireServer()  -- This assumes that the gun has a Reload event
+            end
+        end
+    end
+})
+
+-- Heartbeat Loop for Aimlock
+game:GetService("RunService").Heartbeat:Connect(function(dt)
+    updateDrawings()
+    if isAiming then
+        local target = getTarget()
+        if target then
+            local predictedPosition = predictPos(target)
+            aim(predictedPosition)
+        end
+    end
+end)
+
+-- Clean up on
