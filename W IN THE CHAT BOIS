@@ -1,0 +1,261 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Dhelan and Sherzaahd's Script Hub!?!",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "Wait A Second.",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DeadRailsScripts",
+        FileName = "Settings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "your-discord-invite-code",
+        RememberJoins = true,
+    },
+    KeySystem = false,
+    Key = "YourSecretKey",
+})
+
+-- Tabs
+local MiscTab = Window:CreateTab("Misc")
+local AutoCollectTab = Window:CreateTab("Auto Collect")
+local KillingTab = Window:CreateTab("Killing")
+local MessageTab = Window:CreateTab("Message From Dhelan")
+
+-- Auto Collect Settings
+local autoCollectBonds = false
+local autoCollectWeapons = false
+local autoCollectArmor = false
+local autoCollectAmmo = false
+
+-- ESP Settings
+local validNPCs = {}
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+-- Message From Dhelan Button
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+MessageTab:CreateButton({
+    Name = "Hello Broskieee!!",
+    Callback = function()
+        local message = "Hello Broskieee!!, it's me The Super Duper Epic Cool Hacker ykyk, Hehe i hope you like the script that i made for US ONLY, sorry because there is not much scripts on it right now. But, in the next sunday maybe i can add more things, that's all byeii!!"
+        
+        -- Create a notification or pop-up displaying the message
+        local messageNotification = Instance.new("TextLabel")
+        messageNotification.Parent = ScreenGui
+        messageNotification.Text = message
+        messageNotification.Size = UDim2.new(0, 400, 0, 100)
+        messageNotification.Position = UDim2.new(0.5, -200, 0.5, -50)
+        messageNotification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        messageNotification.TextColor3 = Color3.fromRGB(255, 255, 255)
+        messageNotification.TextSize = 14
+        messageNotification.TextWrapped = true
+        messageNotification.TextScaled = true
+
+        -- Remove the message after 20.5 seconds
+        wait(20.5)
+        messageNotification:Destroy()
+    end
+})
+
+-- Auto Collect Tab - Toggles
+AutoCollectTab:CreateToggle({
+    Name = "Collect Bonds (Treasury Bond)",
+    Default = false,
+    Callback = function(value)
+        autoCollectBonds = value
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Collect Weapons",
+    Default = false,
+    Callback = function(value)
+        autoCollectWeapons = value
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Collect Armor",
+    Default = false,
+    Callback = function(value)
+        autoCollectArmor = value
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Collect Ammo",
+    Default = false,
+    Callback = function(value)
+        autoCollectAmmo = value
+    end
+})
+
+-- Misc Tab - ESP Toggles
+MiscTab:CreateToggle({
+    Name = "ESP NPCs",
+    Default = false,
+    Callback = function(value)
+        -- Add logic to show or hide NPC ESP
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "ESP Items",
+    Default = false,
+    Callback = function(value)
+        -- Add logic to show or hide Item ESP
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Enemy ESP",
+    Default = false,
+    Callback = function(value)
+        -- Logic to handle ESP for enemies
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Esp Things",
+    Default = false,
+    Callback = function(value)
+        -- Add logic to show or hide ESP for specific items
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "ESP Weapons",
+    Default = false,
+    Callback = function(value)
+        -- Logic to show or hide ESP for weapons
+        while value do
+            for _, item in pairs(workspace:GetChildren()) do
+                if item:IsA("Tool") and (item.Name == "Electrocutioner" or item.Name == "Bolt-Action Rifle" or item.Name == "Navy Revolver" or item.Name == "Shotgun" or item.Name == "Rifle" or item.Name == "Mauser" or item.Name == "Revolver" or item.Name == "Sawed-Off Shotgun" or item.Name == "Holy Water" or item.Name == "Tomahawk" or item.Name == "Jade Sword" or item.Name == "Vampire Knife") then
+                    -- Implement ESP for weapons (for example, drawing a box around them)
+                end
+            end
+            wait(1)
+        end
+    end
+})
+
+-- Killing Tab - Melee Kill Aura
+KillingTab:CreateToggle({
+    Name = "Melee Kill Aura",
+    Default = false,
+    Callback = function(value)
+        -- Logic to automatically swing melee weapons when enemies are nearby
+    end
+})
+
+-- Killing Tab - Gun Kill Aura
+KillingTab:CreateToggle({
+    Name = "Gun Kill Aura",
+    Default = false,
+    Callback = function(value)
+        -- Logic to automatically shoot when enemies are close
+    end
+})
+
+-- Aimbot Functionality
+local function updateNPCs()
+    -- Update NPCs logic
+end
+
+local function getTarget()
+    -- Get target logic
+end
+
+local function aim(targetPosition)
+    -- Aimbot logic
+end
+
+local function isNPC(obj)
+    -- NPC detection logic
+end
+
+-- Main Loop to update ESP and Aimbot
+RunService.Heartbeat:Connect(function(dt)
+    if isAiming then
+        local target = getTarget()
+        if target then
+            local predictedPosition = predictPos(target)
+            aim(predictedPosition)
+        end
+    end
+end)
+
+-- Implement Auto Collect Logic for Bonds, Weapons, Ammo, Armor
+AutoCollectTab:CreateToggle({
+    Name = "Auto Collect Bonds",
+    Default = false,
+    Callback = function(value)
+        while value do
+            -- Auto Collect Treasury Bond
+            for _, item in pairs(workspace:GetChildren()) do
+                if item.Name == "Treasury Bond" then
+                    item:Destroy() -- Simulate collection
+                end
+            end
+            wait(1)
+        end
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Auto Collect Weapons",
+    Default = false,
+    Callback = function(value)
+        while value do
+            -- Auto Collect Weapons
+            for _, item in pairs(workspace:GetChildren()) do
+                if item:IsA("Tool") and (item.Name == "Electrocutioner" or item.Name == "Bolt-Action Rifle" or item.Name == "Navy Revolver" or item.Name == "Shotgun" or item.Name == "Rifle" or item.Name == "Mauser" or item.Name == "Revolver" or item.Name == "Sawed-Off Shotgun" or item.Name == "Holy Water" or item.Name == "Tomahawk" or item.Name == "Jade Sword" or item.Name == "Vampire Knife") then
+                    item.Parent = game.Players.LocalPlayer.Backpack
+                end
+            end
+            wait(1)
+        end
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Auto Collect Armor",
+    Default = false,
+    Callback = function(value)
+        while value do
+            -- Auto Collect Armor
+            for _, item in pairs(workspace:GetChildren()) do
+                if item.Name == "Right Shoulder Armor" or item.Name == "Left Shoulder Armor" or item.Name == "Helmet" or item.Name == "Chestplate" or item.Name == "Miner Hat" then
+                    item.Parent = game.Players.LocalPlayer.Backpack
+                end
+            end
+            wait(1)
+        end
+    end
+})
+
+AutoCollectTab:CreateToggle({
+    Name = "Auto Collect Ammo",
+    Default = false,
+    Callback = function(value)
+        while value do
+            -- Auto Collect Ammo
+            for _, item in pairs(workspace:GetChildren()) do
+                if item.Name == "Rifle Ammo" or item.Name == "Shotgun Shells" or item.Name == "Revolver Ammo" then
+                    item.Parent = game.Players.LocalPlayer.Backpack
+                end
+            end
+            wait(1)
+        end
+    end
+})
+
+-- Logic for ESP items, NPCs, and enemies
+-- You can add your ESP rendering and removal logic in the respective callbacks above
+
+-- Main Loop or other Event Handlers as needed
