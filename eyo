@@ -1,0 +1,172 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Dhelan and Sherzaahd's Trolling Gui",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DeadRailsScripts",
+        FileName = "Settings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "your-discord-invite-code",
+        RememberJoins = true,
+    },
+    KeySystem = false,
+    Key = "YourSecretKey",
+})
+
+local MainTab = Window:CreateTab("Dead Rails", 4483362458, tabImageUrl)
+local MiscTab = Window:CreateTab("Misc", 4483362459, tabImageUrl)
+local MessageTab = Window:CreateTab("Message from Dhelan", 4483362460, tabImageUrl)
+local GunsTab = Window:CreateTab("Guns", 4483362461, tabImageUrl)
+
+local fov = 136
+local isAiming = false
+local noclipEnabled = false
+local killAuraEnabled = false
+local autoCollectItems = false
+local autoCollectBonds = false
+local autoCollectAmmo = false
+local autoCollectGuns = false
+local Cam = workspace.CurrentCamera
+local Player = game:GetService("Players").LocalPlayer
+
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = false
+FOVring.Thickness = 2
+FOVring.Filled = false
+FOVring.Radius = fov
+FOVring.Position = Cam.ViewportSize / 2
+
+local function updateDrawings()
+    FOVring.Position = Cam.ViewportSize / 2
+    FOVring.Radius = fov * (Cam.ViewportSize.Y / 1080)
+end
+
+local function updateNPCs()
+end
+
+MainTab:CreateToggle({
+    Name = "Toggle Aimlock",
+    Default = false,
+    Callback = function(value)
+        isAiming = value
+        FOVring.Visible = isAiming
+        updateNPCs()
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "FOV Size",
+    Range = {50, 200},
+    Increment = 1,
+    CurrentValue = fov,
+    Callback = function(value)
+        fov = value
+        updateDrawings()
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Toggle Noclip",
+    Default = false,
+    Callback = function(value)
+        noclipEnabled = value
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if noclipEnabled then
+                local character = Player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CanCollide = false
+                end
+            else
+                local character = Player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CanCollide = true
+                end
+            end
+        end)
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Toggle Kill Aura",
+    Default = false,
+    Callback = function(value)
+        killAuraEnabled = value
+        while killAuraEnabled do
+            for _, npc in ipairs(workspace:GetDescendants()) do
+                if npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+                    npc.Humanoid.Health = 0
+                end
+            end
+            wait(0.1)
+        end
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Items",
+    Default = false,
+    Callback = function(value)
+        autoCollectItems = value
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Bonds",
+    Default = false,
+    Callback = function(value)
+        autoCollectBonds = value
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Ammo",
+    Default = false,
+    Callback = function(value)
+        autoCollectAmmo = value
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Auto Collect Guns",
+    Default = false,
+    Callback = function(value)
+        autoCollectGuns = value
+    end
+})
+
+MessageTab:CreateButton({
+    Name = "Show Message",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Message from Dhelan",
+            Content = "Hello Broskieee!! It's me the Super Duper Cool Hacker Dhelan, ykyk I hope you like the script hub I made for US ONLY so uhhh. Byye!!",
+            Duration = 8.5,
+        })
+    end
+})
+
+GunsTab:CreateButton({
+    Name = "Auto Reload Guns",
+    Callback = function()
+        for _, gun in pairs(Player.Backpack:GetChildren()) do
+            if gun:IsA("Tool") and gun:FindFirstChild("Reload") then
+                gun.Reload:FireServer()
+            end
+        end
+    end
+})
+
+game:GetService("RunService").Heartbeat:Connect(function(dt)
+    updateDrawings()
+    if isAiming then
+    end
+end)
+
+game:GetService("Players").PlayerRemoving:Connect(function()
+    FOVring:Remove()
+end)
