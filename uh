@@ -1,0 +1,220 @@
+-- Custom UI Framework (like ArrayField)
+local function CreateWindow(options)
+    local window = Instance.new("ScreenGui")
+    window.Name = options.Name
+    window.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local title = Instance.new("TextLabel")
+    title.Text = options.LoadingTitle
+    title.Size = UDim2.new(0, 400, 0, 50)
+    title.Position = UDim2.new(0.5, -200, 0.5, -100)
+    title.Parent = window
+
+    -- Loading subtitle
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Text = options.LoadingSubtitle
+    subtitle.Size = UDim2.new(0, 400, 0, 50)
+    subtitle.Position = UDim2.new(0.5, -200, 0.5, 0)
+    subtitle.Parent = window
+
+    -- Adding a theme option (for the color)
+    window.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+
+    return {
+        CreateTab = function(name)
+            local tab = Instance.new("Frame")
+            tab.Name = name
+            tab.Size = UDim2.new(0, 400, 0, 300)
+            tab.Position = UDim2.new(0.5, -200, 0.5, -150)
+            tab.Parent = window
+
+            local tabTitle = Instance.new("TextLabel")
+            tabTitle.Text = name
+            tabTitle.Size = UDim2.new(0, 400, 0, 50)
+            tabTitle.Parent = tab
+            return tab
+        end
+    }
+end
+
+-- Initialize variables
+local flyEnabled = false
+local noclipEnabled = false
+local speedEnabled = false
+local flySpeed = 50
+local speedValue = 16
+
+-- Functions for Character Features
+local function enableFly()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Fly implementation
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+    bodyVelocity.Parent = character.HumanoidRootPart
+end
+
+local function disableFly()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Remove flying force
+    local bodyVelocity = character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity")
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+    end
+end
+
+local function enableNoclip()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    
+    -- Noclip implementation
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function disableNoclip()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    
+    -- Disable noclip (restore collision)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+        end
+    end
+end
+
+local function enableSpeed()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Speed implementation
+    humanoid.WalkSpeed = speedValue
+end
+
+local function disableSpeed()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Reset speed
+    humanoid.WalkSpeed = 16
+end
+
+-- Function to remove textures from a part
+local function removeTexture(part)
+    -- Check if the part has any Decals or other texture instances
+    for _, obj in pairs(part:GetChildren()) do
+        if obj:IsA("Decal") then
+            obj:Destroy()  -- Removes the decal
+        end
+    end
+end
+
+-- Create Window using custom UI Framework
+local SecretServicePanel = CreateWindow({
+    Name = "Secret Service Panel | S.S.P", 
+    LoadingTitle = "Loading S.S.P...",
+    LoadingSubtitle = "Please wait...",
+})
+
+-- Tabs
+local characterTab = SecretServicePanel:CreateTab("Character")
+local banHammerTab = SecretServicePanel:CreateTab("Ban Hammer")
+local enlightenTab = SecretServicePanel:CreateTab("Enlighten")
+local spyChatTab = SecretServicePanel:CreateTab("Spy Chat")
+local creditsTab = SecretServicePanel:CreateTab("Credits")
+
+-- Character Tab Setup
+local flyButton = Instance.new("TextButton")
+flyButton.Text = "Fly: Off"
+flyButton.Size = UDim2.new(0, 200, 0, 50)
+flyButton.Position = UDim2.new(0, 10, 0, 10)
+flyButton.Parent = characterTab
+
+flyButton.MouseButton1Click:Connect(function()
+    flyEnabled = not flyEnabled
+    flyButton.Text = "Fly: " .. (flyEnabled and "On" or "Off")
+    if flyEnabled then
+        enableFly()
+    else
+        disableFly()
+    end
+end)
+
+local speedButton = Instance.new("TextButton")
+speedButton.Text = "Speed: Off"
+speedButton.Size = UDim2.new(0, 200, 0, 50)
+speedButton.Position = UDim2.new(0, 10, 0, 70)
+speedButton.Parent = characterTab
+
+speedButton.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    speedButton.Text = "Speed: " .. (speedEnabled and "On" or "Off")
+    if speedEnabled then
+        enableSpeed()
+    else
+        disableSpeed()
+    end
+end)
+
+local noclipButton = Instance.new("TextButton")
+noclipButton.Text = "Noclip: Off"
+noclipButton.Size = UDim2.new(0, 200, 0, 50)
+noclipButton.Position = UDim2.new(0, 10, 0, 130)
+noclipButton.Parent = characterTab
+
+noclipButton.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    noclipButton.Text = "Noclip: " .. (noclipEnabled and "On" or "Off")
+    if noclipEnabled then
+        enableNoclip()
+    else
+        disableNoclip()
+    end
+end)
+
+-- Ban Hammer Tab Setup (Placeholder)
+local banHammerButton = Instance.new("TextButton")
+banHammerButton.Text = "Activate Ban Hammer"
+banHammerButton.Size = UDim2.new(0, 200, 0, 50)
+banHammerButton.Position = UDim2.new(0, 10, 0, 10)
+banHammerButton.Parent = banHammerTab
+
+banHammerButton.MouseButton1Click:Connect(function()
+    -- Implement ban hammer logic here
+    print("Ban Hammer Activated!")
+end)
+
+-- Enlighten Tab Setup (Auto R6 on death logic)
+local enlightenButton = Instance.new("TextButton")
+enlightenButton.Text = "Auto R6 on Death: Off"
+enlightenButton.Size = UDim2.new(0, 200, 0, 50)
+enlightenButton.Position = UDim2.new(0, 10, 0, 10)
+enlightenButton.Parent = enlightenTab
+
+enlightenButton.MouseButton1Click:Connect(function()
+    -- Implement auto R6 on death functionality
+    print("Auto R6 on death activated!")
+end)
+
+-- Credits Tab Setup
+local creditsLabel = Instance.new("TextLabel")
+creditsLabel.Text = "Credits: Dhelan"
+creditsLabel.Size = UDim2.new(0, 200, 0, 50)
+creditsLabel.Position = UDim2.new(0, 10, 0, 10)
+creditsLabel.Parent = creditsTab
