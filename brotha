@@ -1,0 +1,153 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+-- Create Window
+local Window = OrionLib:MakeWindow({
+    Name = "Secret Service Panel",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest",
+    IntroEnabled = true,
+    IntroText = "Welcome to Secret Service!",
+    IntroIcon = "https://www.example.com/your-icon.png",  -- Change to your desired icon URL
+    Icon = "https://www.example.com/your-window-icon.png",  -- Change to your desired window icon URL
+})
+
+-- Tabs
+local characterTab = Window:MakeTab({
+    Name = "Character",
+    Icon = "rbxassetid://12345678", -- Replace with valid asset ID or URL
+    PremiumOnly = false
+})
+
+local settingsTab = Window:MakeTab({
+    Name = "Settings",
+    Icon = "rbxassetid://87654321", -- Replace with valid asset ID or URL
+    PremiumOnly = false
+})
+
+-- Variables
+local flyEnabled = false
+local noclipEnabled = false
+local speedEnabled = false
+local flySpeed = 50
+local speedValue = 16
+local speedMultiplier = 1  -- Default speed multiplier
+
+-- Character Tab Controls
+-- Fly Toggle
+characterTab:AddToggle({
+    Name = "Enable Fly",
+    Default = false,
+    Callback = function(value)
+        flyEnabled = value
+        if flyEnabled then
+            enableFly()
+        else
+            disableFly()
+        end
+    end
+})
+
+-- Fly Speed Slider
+characterTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 10,
+    Max = 200,
+    Default = 50,
+    Callback = function(value)
+        flySpeed = value
+        print("Fly Speed set to: " .. flySpeed)
+    end
+})
+
+-- Speed Toggle
+characterTab:AddToggle({
+    Name = "Enable Speed",
+    Default = false,
+    Callback = function(value)
+        speedEnabled = value
+        if speedEnabled then
+            enableCustomSpeed()
+        else
+            disableSpeed()
+        end
+    end
+})
+
+-- Speed Amount Slider
+characterTab:AddSlider({
+    Name = "Speed Amount",
+    Min = 16,
+    Max = 100,
+    Default = 16,
+    Callback = function(value)
+        speedValue = value
+        speedMultiplier = speedValue / 16  -- Scaling based on base speed (16 is default)
+        print("Speed Amount set to: " .. speedValue)
+        enableCustomSpeed()  -- Recalculate speed immediately
+    end
+})
+
+-- Settings Tab Controls
+-- Ban Hammer Button
+settingsTab:AddButton({
+    Name = "Activate Ban Hammer",
+    Callback = function()
+        print("Ban Hammer Activated!")
+        -- Your character says the ban command in the chat, which isn't visible to others.
+        local player = game.Players.LocalPlayer
+        player:Chat(";Gear 10468797")  -- Character will say the command silently to the game
+    end
+})
+
+-- Credits Paragraph
+settingsTab:AddParagraph({
+    Name = "Credits",
+    Content = "Script by YourName"
+})
+
+-- Functions for Character Features
+local function enableFly()
+    local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Fly implementation
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+    bodyVelocity.Parent = character.HumanoidRootPart
+end
+
+local function disableFly()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local bodyVelocity = character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity")
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+    end
+end
+
+local function enableCustomSpeed()
+    local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Set WalkSpeed based on the multiplier
+    humanoid.WalkSpeed = 16 * speedMultiplier  -- Default speed of 16 * custom multiplier
+end
+
+local function disableSpeed()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Reset WalkSpeed to the default value
+    humanoid.WalkSpeed = 16 -- Default speed
+end
+
+-- Show Window
+OrionLib:Init()
