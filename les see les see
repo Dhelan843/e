@@ -1,0 +1,85 @@
+-- Load OrionLib
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+
+-- Create custom window
+local Window = OrionLib:MakeWindow({
+    Name = "Secret Service Panel | Arceus X",
+    HidePremium = false,
+    SaveConfig = false,
+    ConfigFolder = "SSP_Config"
+})
+
+-- Grab Orion's UI container
+local CoreGui = game:GetService("CoreGui")
+local OrionUI = CoreGui:WaitForChild("Orion") or game.Players.LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Orion")
+
+-- Wait for window to load
+task.wait(1)
+local mainFrame = OrionUI:FindFirstChild("Main")
+
+-- Customize main frame
+if mainFrame then
+    -- Make it draggable
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+
+    -- Change background color
+    mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+
+    -- Add green glow
+    local stroke = Instance.new("UIStroke", mainFrame)
+    stroke.Color = Color3.fromRGB(0, 255, 0)
+    stroke.Thickness = 2
+    stroke.Transparency = 0.2
+end
+
+-- Tab Example: The Chosen One
+local ChosenTab = Window:MakeTab({
+    Name = "SSP | The Chosen One",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+ChosenTab:AddSection({Name = "SSP | Trolling in TCO"})
+
+ChosenTab:AddButton({
+    Name = "Raid Gui (fix)",
+    Callback = function()
+        print("Raid GUI (fix) activated")
+    end
+})
+
+ChosenTab:AddButton({
+    Name = "Troll Option 1",
+    Callback = function()
+        print("Troll Option 1")
+    end
+})
+
+ChosenTab:AddButton({
+    Name = "Troll Option 2",
+    Callback = function()
+        print("Troll Option 2")
+    end
+})
+
+ChosenTab:AddButton({
+    Name = "Troll GUI (may not work)",
+    Callback = function()
+        print("Troll GUI fallback")
+    end
+})
+
+ChosenTab:AddSection({Name = "My Scripts"})
+
+-- Add additional tabs as needed
+Window:MakeTab({Name = "SSP | Character", Icon = "", PremiumOnly = false})
+Window:MakeTab({Name = "SSP | Scripts", Icon = "", PremiumOnly = false})
+Window:MakeTab({Name = "SSP | TCO 2", Icon = "", PremiumOnly = false})
+Window:MakeTab({Name = "SSP | Anti(s)", Icon = "", PremiumOnly = false})
+Window:MakeTab({Name = "SSP | Build", Icon = "", PremiumOnly = false})
+Window:MakeTab({Name = "SSP | Gears.", Icon = "", PremiumOnly = false})
+Window:MakeTab({Name = "User", Icon = "", PremiumOnly = false})
+
+-- Init the GUI
+OrionLib:Init()
