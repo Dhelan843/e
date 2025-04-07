@@ -1,0 +1,251 @@
+-- Load Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/1Rogue/Rayfield/main/source"))()
+
+-- Create Window
+local SecretServicePanel = Rayfield:CreateWindow({
+    Name = "Secret Service Panel | S.S.P",
+    LoadingTitle = "Loading S.S.P...",
+    LoadingSubtitle = "Please wait...",
+    Theme = "Default",  -- Changed to Default theme
+})
+
+-- Tabs
+local characterTab = SecretServicePanel:CreateTab("Character")
+local banHammerTab = SecretServicePanel:CreateTab("Ban Hammer")
+local enlightenTab = SecretServicePanel:CreateTab("Enlighten")
+local spyChatTab = SecretServicePanel:CreateTab("Spy Chat")
+local creditsTab = SecretServicePanel:CreateTab("Credits")
+
+-- Variables
+local flyEnabled = false
+local noclipEnabled = false
+local speedEnabled = false
+local flySpeed = 50
+local speedValue = 16
+
+-- Character Tab Setup
+characterTab:CreateToggle({
+    Name = "Fly", 
+    CurrentValue = false, 
+    Flag = "FlyToggle", 
+    Callback = function(value)
+        flyEnabled = value
+        if flyEnabled then
+            -- Enable flying
+            enableFly()
+        else
+            -- Disable flying
+            disableFly()
+        end
+    end
+})
+
+characterTab:CreateSlider({
+    Name = "Fly Speed", 
+    Min = 10, 
+    Max = 200, 
+    Default = 50, 
+    Flag = "FlySpeed", 
+    Callback = function(value)
+        flySpeed = value
+    end
+})
+
+characterTab:CreateToggle({
+    Name = "Noclip", 
+    CurrentValue = false, 
+    Flag = "NoclipToggle", 
+    Callback = function(value)
+        noclipEnabled = value
+        if noclipEnabled then
+            -- Enable noclip
+            enableNoclip()
+        else
+            -- Disable noclip
+            disableNoclip()
+        end
+    end
+})
+
+characterTab:CreateToggle({
+    Name = "Speed", 
+    CurrentValue = false, 
+    Flag = "SpeedToggle", 
+    Callback = function(value)
+        speedEnabled = value
+        if speedEnabled then
+            -- Enable speed
+            enableSpeed()
+        else
+            -- Disable speed
+            disableSpeed()
+        end
+    end
+})
+
+characterTab:CreateSlider({
+    Name = "Speed Amount", 
+    Min = 16, 
+    Max = 100, 
+    Default = 16, 
+    Flag = "SpeedSlider", 
+    Callback = function(value)
+        speedValue = value
+    end
+})
+
+-- Ban Hammer Tab Setup
+banHammerTab:CreateButton({
+    Name = "Activate Ban Hammer", 
+    Callback = function()
+        -- Send the hidden command in the game
+        game:GetService("ReplicatedStorage"):FireServer("Gear 10468797") -- The game should detect it
+    end
+})
+
+-- Enlighten Tab Setup
+enlightenTab:CreateToggle({
+    Name = "Auto R6 on Death", 
+    CurrentValue = false, 
+    Flag = "AutoR6Toggle", 
+    Callback = function(value)
+        if value then
+            game:GetService("Players").PlayerAdded:Connect(function(player)
+                player.CharacterAdded:Connect(function(character)
+                    -- Make the player say ";R6" on reset or death, invisible to others
+                    player:Chat(";R6")
+                end)
+            end)
+        end
+    end
+})
+
+-- Spy Chat Tab Setup
+spyChatTab:CreateToggle({
+    Name = "Spy Whispered Messages", 
+    CurrentValue = false, 
+    Flag = "SpyWhisperToggle", 
+    Callback = function(value)
+        if value then
+            -- Implement spy functionality to see whispered messages and hidden chat messages
+            game:GetService("Players").PlayerAdded:Connect(function(player)
+                player.Chatted:Connect(function(message)
+                    if string.sub(message, 1, 6) == "/whisper" then
+                        -- Detect whispered messages and display them
+                        print("Whispered message detected: " .. message)
+                    end
+                end)
+            end)
+        end
+    end
+})
+
+-- Credits Tab Setup
+creditsTab:CreateParagraph({
+    Name = "Credits", 
+    Content = "Dhelan" -- Display text in Credits tab
+})
+
+-- Functions for Character Features
+local function enableFly()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Fly implementation
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+    bodyVelocity.Parent = character.HumanoidRootPart
+end
+
+local function disableFly()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Remove flying force
+    local bodyVelocity = character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity")
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+    end
+end
+
+local function enableNoclip()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    
+    -- Noclip implementation
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function disableNoclip()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    
+    -- Disable noclip (restore collision)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+        end
+    end
+end
+
+local function enableSpeed()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Speed implementation
+    humanoid.WalkSpeed = speedValue
+end
+
+local function disableSpeed()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    -- Reset speed
+    humanoid.WalkSpeed = 16
+end
+
+-- Function to remove textures from a part
+local function removeTexture(part)
+    -- Check if the part has any Decals or other texture instances
+    for _, obj in pairs(part:GetChildren()) do
+        if obj:IsA("Decal") then
+            obj:Destroy()  -- Removes the decal
+        end
+    end
+end
+
+-- Auto apply settings when character is added
+game:GetService("Players").PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        -- Apply features immediately after character spawn
+        if flyEnabled then
+            enableFly()
+        end
+        if noclipEnabled then
+            enableNoclip()
+        end
+        if speedEnabled then
+            enableSpeed()
+        end
+        
+        -- Remove textures from all parts in the character model
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                removeTexture(part)
+            end
+        end
+    end)
+end)
