@@ -1,0 +1,150 @@
+local Script = "-- [Same top setup as before... keep all this unchanged] local TweenService = game:GetService("TweenService") local VirtualInputManager = game:GetService("VirtualInputManager") local Players = game:GetService("Players") local player = Players.LocalPlayer
+
+local function waitForJumpButton() local touchGui = player:WaitForChild("PlayerGui"):WaitForChild("TouchGui") local touchControlFrame = touchGui:WaitForChild("TouchControlFrame") return touchControlFrame:WaitForChild("JumpButton") end
+
+local JumpButton = waitForJumpButton() local gui = JumpButton.Parent
+
+--==[ Style Utilities ]==-- local function styleTextButton(button) button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) button.BackgroundTransparency = 0.5 button.Font = Enum.Font.GothamBold button.TextColor3 = Color3.fromRGB(255, 255, 255) button.TextScaled = true
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.2, 0)
+corner.Parent = button
+
+local outline = Instance.new("UIStroke")
+outline.Thickness = 2
+outline.Color = Color3.fromRGB(150, 150, 150)
+outline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+outline.Parent = button
+
+local textOutline = Instance.new("UIStroke")
+textOutline.Thickness = 1.2
+textOutline.Color = Color3.fromRGB(150, 150, 150)
+textOutline.Parent = button
+
+end
+
+--==[ Button Shine Effect ]==-- local function addShineEffect(button) local shine = Instance.new("UIGradient") shine.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)) } shine.Rotation = 0 shine.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.2), NumberSequenceKeypoint.new(1, 1) }) shine.Parent = button
+
+local function runShine()
+	local tween = TweenService:Create(shine, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Rotation = 180 })
+	shine.Rotation = -90
+	tween:Play()
+end
+
+return runShine
+
+end
+
+--==[ Slide Out & Blur Effect ]==-- local function slideAndRemove(inst) if inst and inst:IsA("GuiObject") then local blurOverlay = Instance.new("Frame") blurOverlay.Size = UDim2.new(1, 0, 1, 0) blurOverlay.Position = UDim2.new(0, 0, 0, 0) blurOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255) blurOverlay.BackgroundTransparency = 1 blurOverlay.ZIndex = inst.ZIndex + 1 blurOverlay.Parent = inst
+
+local fadeTween = TweenService:Create(blurOverlay, TweenInfo.new(0.2), {
+		BackgroundTransparency = 0.6
+	})
+	fadeTween:Play()
+
+	local endPos = inst.Position + UDim2.new(1, 50, 0.5, 50)
+	local moveTween = TweenService:Create(inst, TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		Position = endPos
+	})
+	moveTween:Play()
+
+	task.delay(0.3, function()
+		inst:Destroy()
+	end)
+end
+
+end
+
+--==[ Key Button Creator w/ Inactivity Shine ]==-- local keyButtons = {}
+
+local function createKeyButton(labelText, keyCode, position) local button = Instance.new("ImageButton") button.Size = UDim2.new(0, 60, 0, 60) button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) button.BackgroundTransparency = 0.5 button.Image = "" button.AnchorPoint = Vector2.new(0.5, 0.5) button.Position = position button.Parent = gui table.insert(keyButtons, button)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = button
+
+local outline = Instance.new("UIStroke")
+outline.Thickness = 2
+outline.Color = Color3.fromRGB(150, 150, 150)
+outline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+outline.Parent = button
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1, 0, 1, 0)
+label.BackgroundTransparency = 1
+label.Text = labelText
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.Font = Enum.Font.GothamBold
+label.TextScaled = true
+label.Parent = button
+
+local textOutline = Instance.new("UIStroke")
+textOutline.Thickness = 1.2
+textOutline.Color = Color3.fromRGB(150, 150, 150)
+textOutline.Parent = label
+
+local shadow = label:Clone()
+shadow.TextColor3 = Color3.fromRGB(50, 50, 50)
+shadow.Position = UDim2.new(0, 2, 0, 2)
+shadow.ZIndex = label.ZIndex - 1
+shadow.Parent = button
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(220, 220, 220)),
+	ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255))
+}
+gradient.Rotation = 90
+gradient.Parent = label
+
+local function pulse()
+	local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true)
+	local goal = { Size = UDim2.new(0, 70, 0, 70) }
+	local tween = TweenService:Create(button, tweenInfo, goal)
+	tween:Play()
+end
+
+local function simulateKey()
+	VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+	task.wait(0.1)
+	VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+end
+
+local runShine = addShineEffect(button)
+local lastInteraction = tick()
+
+button.MouseButton1Down:Connect(function()
+	lastInteraction = tick()
+	simulateKey()
+	pulse()
+end)
+
+task.spawn(function()
+	while button and button.Parent do
+		if tick() - lastInteraction > 11 then
+			runShine()
+			lastInteraction = tick()
+		end
+		task.wait(1)
+	end
+end)
+
+end
+
+--==[ Styled Text Button ]==-- local function createStyledButton(text, position, callback) local btn = Instance.new("TextButton") btn.Size = UDim2.new(0, 150, 0, 35) btn.Position = position btn.AnchorPoint = Vector2.new(1, 0) btn.Text = text btn.Parent = gui styleTextButton(btn) btn.MouseButton1Click:Connect(callback) return btn end
+
+--==[ Create Buttons ]==-- local posF = UDim2.new(1, -130, 1, -100) local posR = UDim2.new(0, 100, 1, -110) createKeyButton("Use Sword", Enum.KeyCode.F, posF) createKeyButton("Leap", Enum.KeyCode.R, posR)
+
+--==[ Neptunian V Button ]==-- local neptunianBtn = createStyledButton("Neptunian V", UDim2.new(1, -10, 0, 50), function() loadstring(game:HttpGet("https://raw.githubusercontent.com/GenesisFE/Genesis/main/Obfuscations/Neptunian%20V"))() end)
+
+--==[ Delete Button (Removes all) ]==-- createStyledButton("Delete Buttons", UDim2.new(1, -10, 0, 10), function() for _, child in ipairs(gui:GetChildren()) do if child:IsA("TextButton") or child:IsA("ImageButton") then slideAndRemove(child) end end end)" local buff = ""
+
+for v=1,string.len(Script) do
+
+buff=buff..'\'..string.byte(Script,v)
+
+end
+
+print(buff)
+
