@@ -1,0 +1,205 @@
+local _0x1 = game:GetService("TweenService")
+local _0x2 = game:GetService("VirtualInputManager")
+local _0x3 = game:GetService("Players")
+local _0x4 = _0x3.LocalPlayer
+
+local function _0x5()
+    local _0x6 = _0x4:WaitForChild("PlayerGui"):WaitForChild("TouchGui")
+    local _0x7 = _0x6:WaitForChild("TouchControlFrame")
+    return _0x7:WaitForChild("JumpButton")
+end
+
+local _0x8 = _0x5()
+local _0x9 = _0x8.Parent
+
+--==[ Style Utilities ]==--
+local function _0xa(_0xb)
+    _0xb.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    _0xb.BackgroundTransparency = 0.5
+    _0xb.Font = Enum.Font.GothamBold
+    _0xb.TextColor3 = Color3.fromRGB(255, 255, 255)
+    _0xb.TextScaled = true
+
+    local _0xc = Instance.new("UICorner")
+    _0xc.CornerRadius = UDim.new(0.2, 0)
+    _0xc.Parent = _0xb
+
+    local _0xd = Instance.new("UIStroke")
+    _0xd.Thickness = 2
+    _0xd.Color = Color3.fromRGB(150, 150, 150)
+    _0xd.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    _0xd.Parent = _0xb
+
+    local _0xe = Instance.new("UIStroke")
+    _0xe.Thickness = 1.2
+    _0xe.Color = Color3.fromRGB(150, 150, 150)
+    _0xe.Parent = _0xb
+end
+
+--==[ Button Shine Effect ]==--
+local function _0xf(_0x10)
+    local _0x11 = Instance.new("UIGradient")
+    _0x11.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+    }
+    _0x11.Rotation = 0
+    _0x11.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0.2),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    _0x11.Parent = _0x10
+
+    local function _0x12()
+        local _0x13 = _0x1:Create(_0x11, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Rotation = 180 })
+        _0x11.Rotation = -90
+        _0x13:Play()
+    end
+
+    return _0x12
+end
+
+--==[ Slide Out & Blur Effect ]==--
+local function _0x14(_0x15)
+    if _0x15 and _0x15:IsA("GuiObject") then
+        local _0x16 = Instance.new("Frame")
+        _0x16.Size = UDim2.new(1, 0, 1, 0)
+        _0x16.Position = UDim2.new(0, 0, 0, 0)
+        _0x16.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        _0x16.BackgroundTransparency = 1
+        _0x16.ZIndex = _0x15.ZIndex + 1
+        _0x16.Parent = _0x15
+
+        local _0x17 = _0x1:Create(_0x16, TweenInfo.new(0.2), { BackgroundTransparency = 0.6 })
+        _0x17:Play()
+
+        local _0x18 = _0x15.Position + UDim2.new(1, 50, 0.5, 50)
+        local _0x19 = _0x1:Create(_0x15, TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Position = _0x18 })
+        _0x19:Play()
+
+        task.delay(0.3, function()
+            _0x15:Destroy()
+        end)
+    end
+end
+
+--==[ Key Button Creator w/ Inactivity Shine ]==--
+local _0x1a = {}
+
+local function _0x1b(_0x1c, _0x1d, _0x1e)
+    local _0x1f = Instance.new("ImageButton")
+    _0x1f.Size = UDim2.new(0, 60, 0, 60)
+    _0x1f.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    _0x1f.BackgroundTransparency = 0.5
+    _0x1f.Image = ""
+    _0x1f.AnchorPoint = Vector2.new(0.5, 0.5)
+    _0x1f.Position = _0x1e
+    _0x1f.Parent = _0x9
+    table.insert(_0x1a, _0x1f)
+
+    local _0x20 = Instance.new("UICorner")
+    _0x20.CornerRadius = UDim.new(1, 0)
+    _0x20.Parent = _0x1f
+
+    local _0x21 = Instance.new("UIStroke")
+    _0x21.Thickness = 2
+    _0x21.Color = Color3.fromRGB(150, 150, 150)
+    _0x21.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    _0x21.Parent = _0x1f
+
+    local _0x22 = Instance.new("TextLabel")
+    _0x22.Size = UDim2.new(1, 0, 1, 0)
+    _0x22.BackgroundTransparency = 1
+    _0x22.Text = _0x1c
+    _0x22.TextColor3 = Color3.fromRGB(255, 255, 255)
+    _0x22.Font = Enum.Font.GothamBold
+    _0x22.TextScaled = true
+    _0x22.Parent = _0x1f
+
+    local _0x23 = Instance.new("UIStroke")
+    _0x23.Thickness = 1.2
+    _0x23.Color = Color3.fromRGB(150, 150, 150)
+    _0x23.Parent = _0x22
+
+    local _0x24 = _0x22:Clone()
+    _0x24.TextColor3 = Color3.fromRGB(50, 50, 50)
+    _0x24.Position = UDim2.new(0, 2, 0, 2)
+    _0x24.ZIndex = _0x22.ZIndex - 1
+    _0x24.Parent = _0x1f
+
+    local _0x25 = Instance.new("UIGradient")
+    _0x25.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(220, 220, 220)),
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255))
+    }
+    _0x25.Rotation = 90
+    _0x25.Parent = _0x22
+
+    local function _0x26()
+        local _0x27 = TweenInfo.new(0.15, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true)
+        local _0x28 = { Size = UDim2.new(0, 70, 0, 70) }
+        local _0x29 = _0x1:Create(_0x1f, _0x27, _0x28)
+        _0x29:Play()
+    end
+
+    local function _0x2a()
+        _0x2:SendKeyEvent(true, _0x1d, false, game)
+        task.wait(0.1)
+        _0x2:SendKeyEvent(false, _0x1d, false, game)
+    end
+
+    local _0x2b = _0xf(_0x1f)
+    local _0x2c = tick()
+
+    _0x1f.MouseButton1Down:Connect(function()
+        _0x2c = tick()
+        _0x2a()
+        _0x26()
+    end)
+
+    task.spawn(function()
+        while _0x1f and _0x1f.Parent do
+            if tick() - _0x2c > 11 then
+                _0x2b()
+                _0x2c = tick()
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+--==[ Styled Text Button ]==--
+local function _0x2d(_0x2e, _0x2f, _0x30)
+    local _0x31 = Instance.new("TextButton")
+    _0x31.Size = UDim2.new(0, 150, 0, 35)
+    _0x31.Position = _0x2f
+    _0x31.AnchorPoint = Vector2.new(1, 0)
+    _0x31.Text = _0x2e
+    _0x31.Parent = _0x9
+    _0xa(_0x31)
+    _0x31.MouseButton1Click:Connect(_0x30)
+    return _0x31
+end
+
+--==[ Create Buttons ]==--
+local _0x32 = UDim2.new(1, -130, 1, -100)
+local _0x33 = UDim2.new(0, 100, 1, -110)
+_0x1b("Use Sword", Enum.KeyCode.F, _0x32)
+_0x1b("Leap", Enum.KeyCode.R, _0x33)
+
+--==[ Neptunian V Button ]==--
+local _0x34 = _0x2d("Neptunian V", UDim2.new(1, -10, 0, 50), function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/GenesisFE/Genesis/main/Obfuscations/Neptunian%20V"))()
+end)
+
+--==[ Delete Button (Removes all) ]==--
+_0x2d("Delete Buttons", UDim2.new(1, -10, 0, 10), function()
+    for _, _0x35 in ipairs(_0x9:GetChildren()) do
+        if _0x35:IsA("TextButton") or _0x35:IsA("ImageButton") then
+            _0x14(_0x35)
+        end
+    end
+end)
