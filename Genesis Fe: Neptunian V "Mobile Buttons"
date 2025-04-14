@@ -1,0 +1,88 @@
+ local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function waitForJumpButton()
+	local touchGui = player:WaitForChild("PlayerGui"):WaitForChild("TouchGui")
+	local touchControlFrame = touchGui:WaitForChild("TouchControlFrame")
+	return touchControlFrame:WaitForChild("JumpButton")
+end
+
+local JumpButton = waitForJumpButton()
+local gui = JumpButton.Parent
+
+local function createKeyButton(labelText, keyCode, position)
+	local button = Instance.new("ImageButton")
+	button.Size = UDim2.new(0, 60, 0, 60)
+	button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	button.BackgroundTransparency = 0.5
+	button.Image = ""
+	button.AnchorPoint = Vector2.new(0.5, 0.5)
+	button.Position = position
+	button.Parent = gui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(1, 0)
+	corner.Parent = button
+
+	local outline = Instance.new("UIStroke")
+	outline.Thickness = 2
+	outline.Color = Color3.fromRGB(150, 150, 150)
+	outline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	outline.Parent = button
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.TextColor3 = Color3.fromRGB(255, 255, 255) -- Bright white
+	label.Font = Enum.Font.GothamBold
+	label.TextScaled = true
+	label.Parent = button
+
+	local textOutline = Instance.new("UIStroke")
+	textOutline.Thickness = 1.2
+	textOutline.Color = Color3.fromRGB(150, 150, 150)
+	textOutline.Parent = label
+
+	local shadow = label:Clone()
+	shadow.TextColor3 = Color3.fromRGB(50, 50, 50)
+	shadow.Position = UDim2.new(0, 2, 0, 2)
+	shadow.ZIndex = label.ZIndex - 1
+	shadow.Parent = button
+
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(220, 220, 220)),
+		ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255))
+	}
+	gradient.Rotation = 90
+	gradient.Parent = label
+
+	local function pulse()
+		local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true)
+		local goal = { Size = UDim2.new(0, 70, 0, 70) }
+		local tween = TweenService:Create(button, tweenInfo, goal)
+		tween:Play()
+	end
+
+	local function simulateKey()
+		VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+		task.wait(0.1)
+		VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+	end
+
+	button.MouseButton1Down:Connect(function()
+		simulateKey()
+		pulse()
+	end)
+end
+
+-- Button positions from screenshots
+local posF = UDim2.new(1, -130, 1, -100)  -- "F" button
+local posR = UDim2.new(0, 100, 1, -110)  -- "R" button (left side near emotes)
+
+createKeyButton("Use Sword", Enum.KeyCode.F, posF)
+createKeyButton("Leap", Enum.KeyCode.R, posR)
