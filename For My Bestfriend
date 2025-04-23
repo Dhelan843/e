@@ -1,0 +1,126 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Create the Rayfield window with a custom theme and icon-only toggle
+local Window = Rayfield:CreateWindow({
+    Name = "Noob GUI | The Noobs Vengeance!",
+    Icon = "angry",
+    LoadingTitle = "Noob GUI",
+    LoadingSubtitle = "by NoobieXD!",
+    Theme = "Default",
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    },
+
+    KeybindSettings = {
+        Enabled = true,
+        Keybind = Enum.KeyCode.X,
+        ToggleText = "",
+        Icon = "rbxassetid://6034996695"
+    }
+}, {
+    TextColor = Color3.fromRGB(255, 255, 210),
+    Background = Color3.fromRGB(255, 250, 220),
+    Topbar = Color3.fromRGB(255, 240, 180),
+    Shadow = Color3.fromRGB(200, 190, 130),
+
+    NotificationBackground = Color3.fromRGB(255, 250, 200),
+    NotificationActionsBackground = Color3.fromRGB(230, 230, 160),
+
+    TabBackground = Color3.fromRGB(255, 230, 150),
+    TabStroke = Color3.fromRGB(210, 190, 130),
+    TabBackgroundSelected = Color3.fromRGB(255, 255, 200),
+    TabTextColor = Color3.fromRGB(255, 235, 100),
+    SelectedTabTextColor = Color3.fromRGB(80, 60, 0),
+
+    ElementBackground = Color3.fromRGB(255, 240, 200),
+    ElementBackgroundHover = Color3.fromRGB(255, 245, 210),
+    SecondaryElementBackground = Color3.fromRGB(245, 230, 190),
+    ElementStroke = Color3.fromRGB(190, 170, 100),
+    SecondaryElementStroke = Color3.fromRGB(160, 150, 90),
+
+    SliderBackground = Color3.fromRGB(255, 220, 100),
+    SliderProgress = Color3.fromRGB(255, 200, 60),
+    SliderStroke = Color3.fromRGB(255, 180, 50),
+
+    ToggleBackground = Color3.fromRGB(240, 230, 180),
+    ToggleEnabled = Color3.fromRGB(255, 210, 60),
+    ToggleDisabled = Color3.fromRGB(200, 190, 160),
+    ToggleEnabledStroke = Color3.fromRGB(255, 200, 50),
+    ToggleDisabledStroke = Color3.fromRGB(180, 170, 140),
+    ToggleEnabledOuterStroke = Color3.fromRGB(255, 230, 150),
+    ToggleDisabledOuterStroke = Color3.fromRGB(160, 150, 120),
+
+    DropdownSelected = Color3.fromRGB(255, 240, 190),
+    DropdownUnselected = Color3.fromRGB(240, 230, 170),
+
+    InputBackground = Color3.fromRGB(250, 240, 180),
+    InputStroke = Color3.fromRGB(200, 190, 150),
+    PlaceholderColor = Color3.fromRGB(180, 170, 130)
+})
+
+-- Abilities Tab
+local MainTab = Window:CreateTab("Abilities", "zap")
+
+MainTab:CreateButton({
+    Name = "Get Noob Sprint Tool",
+    Callback = function()
+        local backpack = LocalPlayer:WaitForChild("Backpack")
+        if backpack:FindFirstChild("NoobSprint") then return end
+
+        local tool = Instance.new("Tool")
+        tool.RequiresHandle = false
+        tool.Name = "NoobSprint"
+
+        local isSprinting = false
+        local originalSpeed = nil
+
+        tool.Activated:Connect(function()
+            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if not humanoid then return end
+
+            if not originalSpeed then
+                originalSpeed = humanoid.WalkSpeed
+            end
+
+            if isSprinting then
+                humanoid.WalkSpeed = originalSpeed
+                for _, anim in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                    anim:AdjustSpeed(1)
+                end
+                isSprinting = false
+            else
+                humanoid.WalkSpeed = 65
+                for _, anim in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                    anim:AdjustSpeed(0.5)
+                end
+                isSprinting = true
+            end
+        end)
+
+        tool.Parent = backpack
+    end
+})
+
+-- Credits Tab
+local CreditsTab = Window:CreateTab("Credits", "user")
+
+CreditsTab:CreateParagraph({
+    Title = "Made By:",
+    Content = "NoobieXD!"
+})
+
+CreditsTab:CreateButton({
+    Name = "NoobieXD!",
+    Callback = function() end
+})
+
+CreditsTab:CreateButton({
+    Name = "Rayfield UI",
+    Callback = function() end
+})
